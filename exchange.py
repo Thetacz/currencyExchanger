@@ -48,6 +48,8 @@ class Exchange(object):
     
     def askCurrencyCode(self, symbol):
         output_list = self.switchSymbolToCurrencyCode(symbol)
+        if(not len(output_list)):
+            raise KeyError
         print("Found more currencies under this symbol.")
         for i,x in enumerate(output_list):
             print("{}: code = {}, name = {}".format(i, str(x['cc'].encode('utf-8')), str(x['name'].encode('utf-8'))))
