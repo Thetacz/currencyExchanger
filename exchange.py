@@ -3,13 +3,19 @@
 
 import argparse
 import json
+import forex_python
 from forex_python.converter import CurrencyRates
 from exceptions import NotImplementedError
 import sys
+import os
+     
 
 class Exchange(object):
     def __init__(self, amount, input, output):
         
+        with open (os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json') as f:
+            self.currencies = json.loads(f.read())
+            
         self.amount = amount
         if self.amount is None:
             print("Error: argument --amount is required.")
@@ -22,6 +28,7 @@ class Exchange(object):
             
         self.output = output
         self.converter = CurrencyRates()
+        self.switchSymbolToCurrencyCode("$")
     
     def switchSymbolToCurrencyCode(self, symbol):
         symbol = None
