@@ -87,18 +87,14 @@ class Exchange(object):
                 "output": {
                 }
             }
-            if(self.checkCurrencyCode(self.input)):
-                self.data['input']['currency'] = self.input
-            else:
+            if(not self.checkCurrencyCode(self.input)):
                 self.input =self.askCurrencyCode(self.input)
-                self.data['input']['currency'] = self.input
+            self.data['input']['currency'] = self.input
                 
-            if(self.checkCurrencyCode(self.output)):
-                print("Converting to specified currency.")
-                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
-            else:
+            if(not self.checkCurrencyCode(self.output)):
                 self.output = self.askCurrencyCode(self.output)
-                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+            print("Converting to specified currency.")
+            self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
 
         except NotImplementedError:
             print("Error: Not implemented yet!")
