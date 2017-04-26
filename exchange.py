@@ -8,12 +8,14 @@ from forex_python.converter import CurrencyRates
 from exceptions import NotImplementedError
 import sys
 import os
-     
+
+# USAGE EXAMPLE:     
+# python RocketMap\_git\currencyExchanger\exchange.py --amount 100 --input_currency EUR --output_currency CZK
 
 class Exchange(object):
     def __init__(self, amount, input, output):
         
-        with open (os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json') as f:
+        with open(os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json', 'r') as f:
             self.currencies = json.loads(f.read())
             
         self.amount = amount
@@ -28,11 +30,20 @@ class Exchange(object):
             
         self.output = output
         self.converter = CurrencyRates()
-        self.switchSymbolToCurrencyCode("$")
     
+    def checkCurrencyCode(self, code):
+        for x in self.currencies:
+            if(x['cc'] == code):
+                return True
+        return False
+                    
     def switchSymbolToCurrencyCode(self, symbol):
-        symbol = None
-        return symbol
+        code = []
+        for x in self.currencies:
+            for i in (x['symbol']).encode('utf-8'):
+                if(i == symbol):
+                    code.append(str(x['cc']))       
+        return code
     
     def exchange(self, amount, input, output):
         if(not self.output):
@@ -51,9 +62,15 @@ class Exchange(object):
                     "currency": self.input
                 },
                 "output": {
-                    self.output : "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
                 }
             }
+            if(self.checkCurrencyCode(self.output)):
+                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
+            else:
+                self.output_list = self.switchSymbolToCurrencyCode(self.output)
+                for x in self.output_list:
+                    self.data['output'][x] = "{0:.2f}".format(self.exchange(self.amount, self.input, x))
+                
         except NotImplementedError:
             print("Error: Not implemented yet!")
             sys.exit(1)   
