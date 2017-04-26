@@ -3,7 +3,7 @@
 
 import argparse
 import json
-from currency_converter import CurrencyConverter
+from forex_python.converter import CurrencyRates
 from exceptions import NotImplementedError
 import sys
 
@@ -21,7 +21,11 @@ class Exchange(object):
             sys.exit(1)
             
         self.output = output
-        self.converter = CurrencyConverter()
+        self.converter = CurrencyRates()
+    
+    def switchSymbolToCurrencyCode(self, symbol):
+        symbol = None
+        return symbol
     
     def exchange(self, amount, input, output):
         if(not self.output):
@@ -30,9 +34,9 @@ class Exchange(object):
             raise NotImplementedError, "Not implemented yet!"
         else:
             print("Converting to specified currency.")
-            return self.converter.convert(amount, input, output)
+            return self.converter.convert(input, output, amount)
     
-    def fill_json(self):
+    def fillJson(self):
         try:
             self.data = {
                 "input": { 
@@ -66,7 +70,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     converter = Exchange(args.amount, args.input_currency, args.output_currency)
-    data = converter.fill_json()
+    data = converter.fillJson()
     print(data)      
         
     with open('exchanged.json', 'w') as outfile:
