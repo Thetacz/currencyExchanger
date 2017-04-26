@@ -14,7 +14,19 @@ class Exchange(object):
     
     def exchange(self):
         return self.converter.convert(self.amount, self.input, self.output)
-        
+    
+    def fill_json(self):
+        self.data = {
+            "input": { 
+                "amount": "{0:.2f}".format(self.amount),
+                "currency": self.input
+            },
+            "output": {
+                self.output : "{0:.2f}".format(self.exchange())
+            }
+        }
+        return self.data
+            
     
 
 if __name__ == "__main__":    
@@ -27,17 +39,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     converter = Exchange(args.amount, args.input_currency, args.output_currency)
-    print(converter.exchange())
+    data = converter.fill_json()
+    print(data)
     
-    data = {
-        "input": { 
-            "amount": args.amount,
-            "currency": args.input_currency
-        },
-        "output": {
-            args.output_currency : args.amount
-        }
-    }
+    
         
     with open('exchanged.json', 'w') as outfile:
         json.dump(data, outfile)
