@@ -45,6 +45,10 @@ class Exchange(object):
             }
         except NotImplementedError:
             print("Error: Not implemented yet!")
+            sys.exit(1)        
+        except:
+            e = sys.exc_info()[0]
+            print("Error: %s" % e)
             sys.exit(1)           
         return self.data
                 
