@@ -42,8 +42,32 @@ class Exchange(object):
         for x in self.currencies:
             for i in (x['symbol']).encode('utf-8'):
                 if(i == symbol):
-                    code.append(str(x['cc']))       
+                    code.append(x)     
         return code
+    
+    def askCurrencyCode(self, symbol):
+        output_list = self.switchSymbolToCurrencyCode(symbol)
+        print("Found more currencies under this symbol.")
+        for i,x in enumerate(output_list):
+            print("{}: code = {}, name = {}".format(i, str(x['cc'].encode('utf-8')), str(x['name'].encode('utf-8'))))
+            x['id'] = i
+        vstup = len(output_list)+1
+        while(vstup >= len(output_list) or vstup < 0):
+            try:
+                vstup = int(input("Which one did you mean? (type number)  "))
+                if(vstup >= len(output_list) or vstup < 0):
+                    print("The number must be inside 0 and {} range".format(len(output_list)-1))
+            except NameError:
+                print("Must be a number")
+            except KeyboardInterrupt:
+                print("Interrupted by keyboard, exiting")
+                sys.exit(1) 
+            except:
+                e = sys.exc_info()[0]
+                print("Error: %s" % e)
+        for key in output_list:
+            if key['id'] == vstup:
+                return str(key['cc'])
     
     def exchange(self, amount, input, output):
         if(not self.output):
@@ -67,14 +91,9 @@ class Exchange(object):
                 print("Converting to specified currency.")
                 self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
             else:
-                self.output_list = self.switchSymbolToCurrencyCode(self.output)
-                print("Converting to currencies specified by symbol.")
-                for x in self.output_list:
-                    try:
-                        self.data['output'][x] = "{0:.2f}".format(self.exchange(self.amount, self.input, x))
-                    except forex_python.converter.RatesNotAvailableError:
-                        self.data['output'][x] = "rates not avaiable"
-                
+                self.output = self.askCurrencyCode(self.output)
+                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+
         except NotImplementedError:
             print("Error: Not implemented yet!")
             sys.exit(1)   
