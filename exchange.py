@@ -4,6 +4,8 @@
 import argparse
 import json
 from currency_converter import CurrencyConverter
+from exceptions import NotImplementedError
+import sys
 
 class Exchange(object):
     def __init__(self, amount, input, output):
@@ -12,19 +14,29 @@ class Exchange(object):
         self.output = output
         self.converter = CurrencyConverter()
     
-    def exchange(self):
-        return self.converter.convert(self.amount, self.input, self.output)
+    def exchange(self, amount, input, output):
+        if(not self.output):
+            self.to_all = True
+            print("Converting to all currencies.")
+            raise NotImplementedError, "Not implemented yet!"
+        else:
+            print("Converting to specified currency.")
+            return self.converter.convert(amount, input, output)
     
     def fill_json(self):
-        self.data = {
-            "input": { 
-                "amount": "{0:.2f}".format(self.amount),
-                "currency": self.input
-            },
-            "output": {
-                self.output : "{0:.2f}".format(self.exchange())
+        try:
+            self.data = {
+                "input": { 
+                    "amount": "{0:.2f}".format(self.amount),
+                    "currency": self.input
+                },
+                "output": {
+                    self.output : "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+                }
             }
-        }
+        except NotImplementedError:
+            print("Not implemented yet!")
+            return {}            
         return self.data
             
     
