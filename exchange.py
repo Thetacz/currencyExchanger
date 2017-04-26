@@ -78,7 +78,7 @@ class Exchange(object):
             for i, x  in enumerate(self.currencies):
                 try:
                     print("done: {} / {}". format(i, len(self.currencies)-1))
-                    self.data['output'][str(x['cc'])] = "{0:.2f}".format(self.converter.convert(input, x['cc'], amount))
+                    self.data['output'][str(x['cc'])] = round(self.converter.convert(input, x['cc'], amount), 2)
                 except forex_python.converter.RatesNotAvailableError:
                     self.data['output'][str(x['cc'])] = "rates not avaiable"
         else:            
@@ -88,13 +88,13 @@ class Exchange(object):
         try:
             self.data = {
                 "input": { 
-                    "amount": "{0:.2f}".format(self.amount),
+                    "amount": round(self.amount, 2),
                 },
                 "output": {
                 }
             }
             if(not self.checkCurrencyCode(self.input)):
-                self.input =self.askCurrencyCode(self.input)
+                self.input = self.askCurrencyCode(self.input)
             self.data['input']['currency'] = self.input
                 
             if(not self.checkCurrencyCode(self.output) and self.output):
@@ -104,7 +104,7 @@ class Exchange(object):
                 if(not self.output):
                     self.exchange(self.amount, self.input, self.output)
                 else:
-                    self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+                    self.data['output'][self.output] = round(self.exchange(self.amount, self.input, self.output), 2)
             except forex_python.converter.RatesNotAvailableError: 
                 self.data['output'][self.output] = "rates not avaiable"
         except NotImplementedError:
@@ -116,7 +116,7 @@ class Exchange(object):
         except:
             e = sys.exc_info()[0]
             print("Error: %s" % e)
-            sys.exit(1)           
+            sys.exit(1)          
         return self.data
                 
 
