@@ -71,10 +71,14 @@ class Exchange(object):
                 return str(key['cc'])
     
     def exchange(self, amount, input, output):
-        if(not self.output):
-            self.to_all = True
+        if(not output):
             print("Converting to all currencies.")
-            raise NotImplementedError, "Not implemented yet!"
+            for i, x  in enumerate(self.currencies):
+                try:
+                    print("done: {} / {}". format(i, len(self.currencies)-1))
+                    self.data['output'][str(x['cc'])] = "{0:.2f}".format(self.converter.convert(input, x['cc'], amount))
+                except forex_python.converter.RatesNotAvailableError:
+                    self.data['output'][str(x['cc'])] = "rates not avaiable"
         else:            
             return self.converter.convert(input, output, amount)
     
@@ -94,9 +98,11 @@ class Exchange(object):
             if(not self.checkCurrencyCode(self.output) and self.output):
                 self.output = self.askCurrencyCode(self.output)
             print("Converting to specified currency.")
-            
-            try: 
-                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+            try:
+                if(not self.output):
+                    self.exchange(self.amount, self.input, self.output)
+                else:
+                    self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
             except forex_python.converter.RatesNotAvailableError: 
                 self.data['output'][self.output] = "rates not avaiable"
         except NotImplementedError:
