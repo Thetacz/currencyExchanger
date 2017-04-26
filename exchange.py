@@ -19,16 +19,19 @@ class Exchange(object):
             self.currencies = json.loads(f.read())
             
         self.amount = amount
-        if self.amount is None:
+        if(self.amount is None):
             print("Error: argument --amount is required.")
             sys.exit(1)
-            
-        self.input = input.upper()
-        if self.input is None:
+        
+        if(input is None):
             print("Error: argument --input_currency is required.")
-            sys.exit(1)
-            
-        self.output = output.upper()
+            sys.exit(1)    
+        self.input = input.upper()
+        
+        if(output):    
+            self.output = output.upper()
+        else:
+            self.output = None
             
         self.converter = CurrencyRates()
     
