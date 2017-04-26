@@ -23,12 +23,12 @@ class Exchange(object):
             print("Error: argument --amount is required.")
             sys.exit(1)
             
-        self.input = input
+        self.input = input.upper()
         if self.input is None:
             print("Error: argument --input_currency is required.")
             sys.exit(1)
             
-        self.output = output
+        self.output = output.upper()
             
         self.converter = CurrencyRates()
     
