@@ -82,7 +82,6 @@ class Exchange(object):
             self.data = {
                 "input": { 
                     "amount": "{0:.2f}".format(self.amount),
-                    "currency": self.input
                 },
                 "output": {
                 }
@@ -94,7 +93,12 @@ class Exchange(object):
             if(not self.checkCurrencyCode(self.output)):
                 self.output = self.askCurrencyCode(self.output)
             print("Converting to specified currency.")
-            self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
+            
+            try: 
+                self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output))
+            except forex_python.converter.RatesNotAvailableError: 
+                self.data['output'][self.output] = "rates not avaiable"
+  
 
         except NotImplementedError:
             print("Error: Not implemented yet!")
