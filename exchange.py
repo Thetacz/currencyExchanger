@@ -5,16 +5,11 @@ import argparse
 import json
 import forex_python
 from forex_python.converter import CurrencyRates
-from exceptions import NotImplementedError
 import sys
 import os
 
-# USAGE EXAMPLE:     
-# python RocketMap\_git\currencyExchanger\exchange.py --amount 100 --input_currency EUR --output_currency CZK
-
 class Exchange(object):
-    def __init__(self, amount, input, output):
-        
+    def __init__(self, amount, input, output):        
         with open(os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json', 'r') as f:
             self.currencies = json.loads(f.read())
             
@@ -51,12 +46,15 @@ class Exchange(object):
     
     def askCurrencyCode(self, symbol):
         output_list = self.switchSymbolToCurrencyCode(symbol)
+        
         if(not len(output_list)):
             raise KeyError
+        
         print("Found more currencies under this symbol.")
         for i,x in enumerate(output_list):
             print("{}: code = {}, name = {}".format(i, str(x['cc'].encode('utf-8')), str(x['name'].encode('utf-8'))))
             x['id'] = i
+            
         vstup = len(output_list)+1
         while(vstup >= len(output_list) or vstup < 0):
             try:
@@ -71,6 +69,7 @@ class Exchange(object):
             except:
                 e = sys.exc_info()[0]
                 print("Error: %s" % e)
+                
         for key in output_list:
             if key['id'] == vstup:
                 return str(key['cc'])
@@ -110,9 +109,7 @@ class Exchange(object):
                     self.data['output'][self.output] = round(self.exchange(self.amount, self.input, self.output), 2)
             except forex_python.converter.RatesNotAvailableError: 
                 self.data['output'][self.output] = "rates not avaiable"
-        except NotImplementedError:
-            print("Error: Not implemented yet!")
-            sys.exit(1)   
+                  
         except KeyError:
             print("Error: used unknown currency")
             sys.exit(1)    
