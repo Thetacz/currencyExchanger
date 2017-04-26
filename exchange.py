@@ -9,8 +9,17 @@ import sys
 
 class Exchange(object):
     def __init__(self, amount, input, output):
+        
         self.amount = amount
+        if self.amount is None:
+            print("Error: argument --amount is required.")
+            sys.exit(1)
+            
         self.input = input
+        if self.input is None:
+            print("Error: argument --input_currency is required.")
+            sys.exit(1)
+            
         self.output = output
         self.converter = CurrencyConverter()
     
@@ -35,11 +44,10 @@ class Exchange(object):
                 }
             }
         except NotImplementedError:
-            print("Not implemented yet!")
-            return {}            
+            print("Error: Not implemented yet!")
+            sys.exit(1)           
         return self.data
-            
-    
+                
 
 if __name__ == "__main__":    
     
@@ -52,9 +60,7 @@ if __name__ == "__main__":
 
     converter = Exchange(args.amount, args.input_currency, args.output_currency)
     data = converter.fill_json()
-    print(data)
-    
-    
+    print(data)      
         
     with open('exchanged.json', 'w') as outfile:
         json.dump(data, outfile)
