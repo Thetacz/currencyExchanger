@@ -87,6 +87,12 @@ class Exchange(object):
                 "output": {
                 }
             }
+            if(self.checkCurrencyCode(self.input)):
+                self.data['input']['currency'] = self.input
+            else:
+                self.input =self.askCurrencyCode(self.input)
+                self.data['input']['currency'] = self.input
+                
             if(self.checkCurrencyCode(self.output)):
                 print("Converting to specified currency.")
                 self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
