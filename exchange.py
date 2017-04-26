@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-
-
-
+import json
 
 if __name__ == "__main__":    
     
@@ -14,3 +12,18 @@ if __name__ == "__main__":
     parser.add_argument("--input_currency", type=str, help="input currency - 3 letters name or currency symbol")     
     parser.add_argument("--output_currency", type=str, help="requested/output currency - 3 letters name or currency symbol")   
     args = parser.parse_args()
+    
+    
+    output = {
+        "input": { 
+            "amount": args.amount,
+            "currency": args.input_currency
+        },
+        "output": {
+            args.output_currency : args.amount
+        }
+    }
+        
+    with open('exchanged.json', 'w') as outfile:
+        json.dump(output, outfile)
+
