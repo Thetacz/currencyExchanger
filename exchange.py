@@ -50,8 +50,7 @@ class Exchange(object):
             self.to_all = True
             print("Converting to all currencies.")
             raise NotImplementedError, "Not implemented yet!"
-        else:
-            print("Converting to specified currency.")
+        else:            
             return self.converter.convert(input, output, amount)
     
     def fillJson(self):
@@ -65,11 +64,16 @@ class Exchange(object):
                 }
             }
             if(self.checkCurrencyCode(self.output)):
+                print("Converting to specified currency.")
                 self.data['output'][self.output] = "{0:.2f}".format(self.exchange(self.amount, self.input, self.output)) 
             else:
                 self.output_list = self.switchSymbolToCurrencyCode(self.output)
+                print("Converting to currencies specified by symbol.")
                 for x in self.output_list:
-                    self.data['output'][x] = "{0:.2f}".format(self.exchange(self.amount, self.input, x))
+                    try:
+                        self.data['output'][x] = "{0:.2f}".format(self.exchange(self.amount, self.input, x))
+                    except forex_python.converter.RatesNotAvailableError:
+                        self.data['output'][x] = "rates not avaiable"
                 
         except NotImplementedError:
             print("Error: Not implemented yet!")
