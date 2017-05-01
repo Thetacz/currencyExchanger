@@ -2,13 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import urllib2
 import json
 import forex_python
 from forex_python.converter import CurrencyRates
 import sys
 import os
 
+YAHOO_CURRENCY_CONVERTER_URL = 'http://finance.yahoo.com/connection/currency-converter-cache?date='
+SYMBOLS_URL = "http://www.localeplanet.com/api/auto/currencymap.json"
+
 class Exchange(object):
+    
     def __init__(self, amount, input, output):        
         with open(os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json', 'r') as f:
             self.currencies = json.loads(f.read())
@@ -29,6 +34,50 @@ class Exchange(object):
             self.output = None
             
         self.converter = CurrencyRates()
+        
+        self.rates = {}
+        # get newest rates available
+        self._getRates()        
+        self._loadSymbols()
+        
+    def _getRates(self):
+        data = json.loads('[' + "".join(urllib2.urlopen(YAHOO_CURRENCY_CONVERTER_URL).readlines()[8:-5]).replace("\n", "") + ']')   
+        if data:     
+            for x in data:
+                _code = x["resource"]["fields"]["symbol"][:3]
+                self.rates[_code] = {
+                    u'time' : int(x["resource"]["fields"]["ts"]),
+                    u'rate' : float(x["resource"]["fields"]["price"]),
+                    u'symbol' : None
+                }       
+            return True
+        else:
+            print("Could not get new rates, using rates in rates.json")
+            with open('rates.json') as data_file:    
+                data = json.load(data_file)    
+            for x in data:
+                self.rates[x] = {
+                    u'time' : int(x["resource"]["fields"]["ts"]),
+                    u'rate' : float(x["resource"]["fields"]["price"]),
+                    u'symbol' : None
+                }
+            return False
+        
+    def _loadSymbols(self):
+        data = json.loads("".join(urllib2.urlopen(SYMBOLS_URL).readlines()))
+        if data:
+            for x in data:
+                if x in self.rates:
+                    self.rates[x][u'symbol'] = data[x][u'symbol_native']
+            return True
+        else:
+            print("Could not get symbols, using symbols in rates.json")
+            with open('rates.json') as data_file:    
+                data = json.load(data_file)    
+            for x in data:
+                if x in self.rates:
+                    self.rates[x]["symbol"] = data[x]["symbol_native"].encode("utf-8")
+            return False
     
     def checkCurrencyCode(self, code):
         for x in self.currencies:
@@ -135,4 +184,4 @@ if __name__ == "__main__":
         
     with open('exchanged.json', 'w') as outfile:
         json.dump(data, outfile)
-
+        
