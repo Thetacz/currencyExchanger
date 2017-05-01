@@ -12,4 +12,4 @@ Params:
 	
 Output is json object writen in console and to file 'exchanged.json'.
 
-note: If you use symbol that matches more currencies, it converts to them all.
+note: If you use symbol that matches more currencies, it converts to them all. Caution: If symbol is used at input, will create list of JSON objects for each of matching pair symbol - code!
