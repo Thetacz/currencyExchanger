@@ -4,50 +4,47 @@
 import argparse
 import urllib2
 import json
-import forex_python
-from forex_python.converter import CurrencyRates
 import sys
-import os
 
 YAHOO_CURRENCY_CONVERTER_URL = 'http://finance.yahoo.com/connection/currency-converter-cache?date='
 SYMBOLS_URL = "http://www.localeplanet.com/api/auto/currencymap.json"
 
 class Exchange(object):
     
-    def __init__(self, amount, input, output):        
-        with open(os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json', 'r') as f:
-            self.currencies = json.loads(f.read())
+    def __init__(self, amount, _input, _output):        
+        #with open(os.path.dirname(os.path.abspath(forex_python.__file__)) + '/raw_data/currencies.json', 'r') as f:
+        #     self.currencies = json.loads(f.read())
             
         self.amount = amount
         if(self.amount is None):
             print("Error: argument --amount is required.")
             sys.exit(1)
         
-        if(input is None):
+        if(_input is None):
             print("Error: argument --input_currency is required.")
             sys.exit(1)    
-        self.input = input.upper()
+        self.input = _input.upper()
         
-        if(output):    
-            self.output = output.upper()
+        if(_output):    
+            self.output = _output.upper()
         else:
             self.output = None
-            
-        self.converter = CurrencyRates()
-        
+                    
         self.rates = {}
         # get newest rates available
         self._getRates()        
         self._loadSymbols()
         
+        self.multiple_output = False
+        
     def _getRates(self):
         data = json.loads('[' + "".join(urllib2.urlopen(YAHOO_CURRENCY_CONVERTER_URL).readlines()[8:-5]).replace("\n", "") + ']')   
         if data:     
             for x in data:
-                _code = x["resource"]["fields"]["symbol"][:3]
+                _code = x[u"resource"][u"fields"][u"symbol"][:3]
                 self.rates[_code] = {
-                    u'time' : int(x["resource"]["fields"]["ts"]),
-                    u'rate' : float(x["resource"]["fields"]["price"]),
+                    u'time' : int(x[u"resource"][u"fields"][u"ts"]),
+                    u'rate' : float(x[u"resource"][u"fields"][u"price"]),
                     u'symbol' : None
                 }       
             return True
@@ -57,8 +54,8 @@ class Exchange(object):
                 data = json.load(data_file)    
             for x in data:
                 self.rates[x] = {
-                    u'time' : int(x["resource"]["fields"]["ts"]),
-                    u'rate' : float(x["resource"]["fields"]["price"]),
+                    u'time' : int(x[u"resource"][u"fields"][u"ts"]),
+                    u'rate' : float(x[u"resource"][u"fields"][u"price"]),
                     u'symbol' : None
                 }
             return False
@@ -76,64 +73,42 @@ class Exchange(object):
                 data = json.load(data_file)    
             for x in data:
                 if x in self.rates:
-                    self.rates[x]["symbol"] = data[x]["symbol_native"].encode("utf-8")
+                    self.rates[x][u"symbol"] = data[x][u"symbol_native"].encode("utf-8")
             return False
     
     def checkCurrencyCode(self, code):
-        for x in self.currencies:
-            if(x['cc'] == code):
+        for x in self.rates:
+            if(x == code):
                 return True
         return False
                     
     def switchSymbolToCurrencyCode(self, symbol):
         code = []
-        for x in self.currencies:
-            for i in (x['symbol']).encode('utf-8'):
-                if(i == symbol):
-                    code.append(x)     
-        return code
+        for x in self.rates:
+            if(self.rates[x][u'symbol']):
+                if(self.rates[x][u'symbol'].encode("utf-8") == symbol.encode("utf-8")):
+                    code.append(x)
+        self.multiple_output = True
+        if(code == []):
+            raise KeyError("{} not found in known rates".format(symbol))
+        return [str(x) for x in code]
+               
+    def getRate(self, code):
+        return self.rates[code][u'rate']  
     
-    def askCurrencyCode(self, symbol):
-        output_list = self.switchSymbolToCurrencyCode(symbol)
-        
-        if(not len(output_list)):
-            raise KeyError
-        
-        print("Found more currencies under this symbol.")
-        for i,x in enumerate(output_list):
-            print("{}: code = {}, name = {}".format(i, str(x['cc'].encode('utf-8')), str(x['name'].encode('utf-8'))))
-            x['id'] = i
-            
-        vstup = len(output_list)+1
-        while(vstup >= len(output_list) or vstup < 0):
-            try:
-                vstup = int(input("Which one did you mean? (type number)  "))
-                if(vstup >= len(output_list) or vstup < 0):
-                    print("The number must be inside 0 and {} range".format(len(output_list)-1))
-            except NameError:
-                print("Must be a number")
-            except KeyboardInterrupt:
-                print("Interrupted by keyboard, exiting")
-                sys.exit(1) 
-            except:
-                e = sys.exc_info()[0]
-                print("Error: %s" % e)
-                
-        for key in output_list:
-            if key['id'] == vstup:
-                return str(key['cc'])
-    
-    def exchange(self, amount, input, output):
-        if(not output):
-            print("Converting to all currencies.")
-            for i, x  in enumerate(self.currencies):
-                try:
-                    print("done: {} / {}". format(i, len(self.currencies)-1))
-                    self.data['output'][str(x['cc'])] = round(self.converter.convert(input, x['cc'], amount), 2)
-                except forex_python.converter.RatesNotAvailableError:
-                    self.data['output'][str(x['cc'])] = "rates not avaiable"
-        else:            
-            return self.converter.convert(input, output, amount)
+    def exchange(self, amount, _input, _output):
+        input_rate = self.getRate(_input)
+        if self.multiple_output:
+            for x in _output:
+                rate = (self.amount / input_rate) * self.getRate(x)
+                self.data[u'output'][x] = round(rate, 2)
+        elif not _output:
+            for x in self.rates:
+                rate = (self.amount / input_rate) * self.getRate(x)
+                self.data[u'output'][str(x)] = round(rate, 2)                    
+        else:
+            rate = (self.amount / input_rate) * self.getRate(_output)
+            self.data[u'output'][_output] = round(rate, 2)
     
     def fillJson(self):
         try:
@@ -145,27 +120,20 @@ class Exchange(object):
                 }
             }
             if(not self.checkCurrencyCode(self.input)):
-                self.input = self.askCurrencyCode(self.input)
+                self.input = self.switchSymbolToCurrencyCode(self.input)
             self.data['input']['currency'] = self.input
-                
+                    
             if(not self.checkCurrencyCode(self.output) and self.output):
-                self.output = self.askCurrencyCode(self.output)
-            print("Converting to specified currency.")
-            try:
-                if(not self.output):
-                    self.exchange(self.amount, self.input, self.output)
-                else:
-                    self.data['output'][self.output] = round(self.exchange(self.amount, self.input, self.output), 2)
-            except forex_python.converter.RatesNotAvailableError: 
-                self.data['output'][self.output] = "rates not avaiable"
-                  
-        except KeyError:
-            print("Error: used unknown currency")
-            sys.exit(1)    
+                self.output = self.switchSymbolToCurrencyCode(self.output)
+            
+            self.exchange(self.amount, self.input, self.output)
+                     
         except:
             e = sys.exc_info()[0]
-            print("Error: %s" % e)
-            sys.exit(1)          
+            print("Error: {}".format(e))
+            print("exiting...")
+            sys.exit(1)
+   
         return self.data
                 
 
