@@ -35,6 +35,7 @@ class Exchange(object):
         self._getRates()        
         self._loadSymbols()
         
+        self.multiple_input = False
         self.multiple_output = False
         
     def _getRates(self):
@@ -76,6 +77,15 @@ class Exchange(object):
                     self.rates[x][u"symbol"] = data[x][u"symbol_native"].encode("utf-8")
             return False
     
+    def _createJsonForm(self):
+        self.data = {
+                "input": { 
+                    "amount": round(self.amount, 2),
+                },
+                "output": {
+                }
+        }
+    
     def checkCurrencyCode(self, code):
         for x in self.rates:
             if(x == code):
@@ -88,7 +98,6 @@ class Exchange(object):
             if(self.rates[x][u'symbol']):
                 if(self.rates[x][u'symbol'].encode("utf-8") == symbol.encode("utf-8")):
                     code.append(x)
-        self.multiple_output = True
         if(code == []):
             raise KeyError("{} not found in known rates".format(symbol))
         return [str(x) for x in code]
@@ -111,32 +120,37 @@ class Exchange(object):
             self.data[u'output'][_output] = round(rate, 2)
     
     def fillJson(self):
-        try:
-            self.data = {
-                "input": { 
-                    "amount": round(self.amount, 2),
-                },
-                "output": {
-                }
-            }
+        #try:
+        if 1:
             if(not self.checkCurrencyCode(self.input)):
                 self.input = self.switchSymbolToCurrencyCode(self.input)
-            self.data['input']['currency'] = self.input
-                    
+                self.multiple_input = True
+                
             if(not self.checkCurrencyCode(self.output) and self.output):
-                self.output = self.switchSymbolToCurrencyCode(self.output)
-            
-            self.exchange(self.amount, self.input, self.output)
-                     
+                    self.output = self.switchSymbolToCurrencyCode(self.output)
+                    self.multiple_output = True
+                    
+            if not self.multiple_input:
+                self._createJsonForm()
+                self.data['input']['currency'] = self.input                
+                self.exchange(self.amount, self.input, self.output)
+                return self.data
+            else:
+                data_multiple = []
+                for x in self.input:
+                    self._createJsonForm()
+                    self.data['input']['currency'] = x
+                    self.exchange(self.amount, x, self.output)
+                    data_multiple.append(self.data)
+                return data_multiple
+        """             
         except:
             e = sys.exc_info()[0]
             print("Error: {}".format(e))
             print("exiting...")
             sys.exit(1)
-   
-        return self.data
-                
-
+        """        
+    
 if __name__ == "__main__":    
     
     parser = argparse.ArgumentParser(description="This is a currency echanger.")
