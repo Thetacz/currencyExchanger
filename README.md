@@ -1,5 +1,15 @@
 ## Currency Exchanger written as Kiwi.com task
 
-It uses fortex-python module to do the heavy lifting. Output is json object writen in console and to file 'exchangex.json'.
+Uses YAHOO financial rates and symbols from localeplanet.com. If it can't connect, uses local copy in 'rates.json'.
 
-note: if it can't find rate on selected currencty, it writes 'rate not available' instead of the exchange rate
+Params:
+
+	--amount			amount of currency to be exchanged
+	
+	--input_currency	code or symbol of currency to be achanged
+	
+	--output_currency	code or symbol of currency to exchange to (if not provided will convert to all known currencies)
+	
+Output is json object writen in console and to file 'exchanged.json'.
+
+note: If you use symbol that matches more currencies, it converts to them all.
